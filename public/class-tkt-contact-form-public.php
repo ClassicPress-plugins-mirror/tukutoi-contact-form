@@ -244,14 +244,17 @@ class Tkt_Contact_Form_Public {
 		if ( false === $error ) {
 
 			$email_subject = sanitize_text_field( $this->form_fields['tcejbus_dleif'] );
-			$email_message = sanitize_textarea_field( $this->form_fields['egassem_dleif'] ) . "\n\nIP: " . sanitize_text_field( $this->get_the_ip() );
+			$email_message = sanitize_textarea_field( $this->form_fields['egassem_dleif'] );
+			$email_ip = sanitize_text_field( $this->get_the_ip() );
 			$headers  = 'From: ' . sanitize_text_field( $this->form_fields['eman_dleif'] ) . ' <' . sanitize_email( $this->form_fields['liame_dleif'] ) . ">\n";
-			$headers .= "Content-Type: text/plain; charset=UTF-8\n";
+			$headers .= "Content-Type: text/html; charset=UTF-8\n";
 			$headers .= "Content-Transfer-Encoding: 8bit\n";
 			$receiver = sanitize_email( apply_filters( 'tkt_cntct_frm_email', get_bloginfo( 'admin_email' ), $this->form_fields['id'] ) );
 
 			$email_subject = sanitize_text_field( apply_filters( 'tkt_cntct_frm_subject', $email_subject, $this->form_fields, $receiver ) );
-			$email_message = sanitize_textarea_field( apply_filters( 'tkt_cntct_frm_message', $email_message, $this->form_fields, $receiver ) );
+			$email_message = wp_kses_post( apply_filters( 'tkt_cntct_frm_message', $email_message, $this->form_fields, $receiver ) );
+			$email_ip = apply_filters( 'tkt_cntct_frm_ip', $this->get_the_ip(), $this->form_fields['id'] );
+			$email_message = $email_message . "\n\nIP: " . sanitize_text_field( $email_ip );
 
 			do_action( 'tkt_cntct_frm_pre_send_mail', $this->form_fields );
 			wp_mail( $receiver, $email_subject, $email_message, $headers );
