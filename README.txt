@@ -4,7 +4,7 @@ Donate link: https://www.tukutoi.com/
 Tags: contact form, form, classicpress
 Requires at least: 1.0.0
 Tested up to: 4.9.99
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -61,7 +61,7 @@ function new_email( $email, $id ){
 * `tkt_cntct_frm_message`. Allows to modify (or append to) the Message of email sent. Second argument are ALL the form Fields (array). Form ID is part of the form fields. Third argument is the receiver Email.
 ```
 add_filter('tkt_cntct_frm_message', 'append_to_message', 10, 3);
-function add_footer( $message, $form_fields, $receiver ){
+function append_to_message( $message, $form_fields, $receiver ){
 	if( (int)$form_fields['id'] === 2 ){// If your form is ID 2
 		return $message . 'appended string';
 	} elseif( $receiver === 'my@receiver.com' ){
@@ -96,6 +96,9 @@ Available classes and IDs:
 
 
 == Changelog ==
+
+= 2.0.1 =
+[Fixed] Error in the readme description for filter tkt_cntct_frm_message.
 
 = 2.0.0 =
 * [Removed] ShortCode attribute to change receiver email
