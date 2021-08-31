@@ -152,6 +152,9 @@ Note that Plugin CSS (and JS) are enqueued only when the ShortCode is added to a
 
 ## Changelog
 
+### 2.1.2
+[Fixed] Make sure HTML is not lost from IP Paragraph
+
 ### 2.1.1
 [Added] Readme Examples for Filters
 [Added] Comments to code 
