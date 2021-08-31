@@ -2,7 +2,7 @@
 /**
  * The plugin bootstrap file
  *
- * This file is read by WordPress or ClassicPress to generate the plugin information in the plugin
+ * This file is read by WordPress to generate the plugin information in the plugin
  * admin area. This file also includes all of the dependencies used by the plugin,
  * registers the activation and deactivation functions, and defines a function
  * that starts the plugin.
@@ -14,11 +14,11 @@
  * @wordpress-plugin
  * Plugin Name:       TukuToi Contact Form
  * Plugin URI:        https://plugin.com/tkt-contact-form-uri/
- * Description:       A simple Contact Form for ClassicPress.
- * Version:           1.0.1
+ * Description:       A simple Contact Form for WordPress.
+ * Version:           2.1.0
  * Author:            TukuToi
  * Requires at least: 1.0.0
- * Tested up to:      5.8
+ * Tested up to:      49.99
  * Author URI:        https://www.tukutoi.com//
  * License:           GPL-2.0+
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.txt
@@ -36,7 +36,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'TKT_CONTACT_FORM_VERSION', '1.0.1' );
+define( 'TKT_CONTACT_FORM_VERSION', '2.1.0' );
 
 /**
  * The code that runs during plugin activation.

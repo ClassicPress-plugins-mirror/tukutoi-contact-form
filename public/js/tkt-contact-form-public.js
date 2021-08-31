@@ -33,7 +33,7 @@
 
 	$(document).ready(function() {
 
-		$('input.ohnohoney').each(function() {
+		$('input.tkt-ohnohoney').each(function() {
 			not_empty = $(this).val().length !== 0;
 			$(this).on('change', function(){
 				not_empty = $(this).val().length !== 0;
@@ -43,7 +43,7 @@
 			});
 		});
 
-		$('textarea.ohnohoney').each(function() {
+		$('textarea.tkt-ohnohoney').each(function() {
 			console.log($(this).val().length);
 			not_empty = $(this).val().length !== 0;
 			$(this).on('change', function(){

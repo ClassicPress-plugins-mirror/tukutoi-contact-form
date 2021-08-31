@@ -167,7 +167,7 @@ class Tkt_Contact_Form {
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 
 		$this->loader->add_shortcode( $this->get_plugin_prefix() . 'contact_form', $plugin_public, 'contact_form' );
-
+		$this->loader->add_action( 'template_redirect', $plugin_public, 'handle_contact_form' );
 	}
 
 	/**
