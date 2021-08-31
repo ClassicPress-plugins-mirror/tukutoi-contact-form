@@ -23,5 +23,5 @@
     z-index: -1;
 }
 .tkt-missing-or-invalid {
-    border: darkred solid;
+    border: darkred solid !important;
 }

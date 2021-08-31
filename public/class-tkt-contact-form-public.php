@@ -243,39 +243,54 @@ class Tkt_Contact_Form_Public {
 
 		if ( false === $error ) {
 
-			$email_subject = sanitize_text_field( $this->form_fields['tcejbus_dleif'] );
-			$email_message = sanitize_textarea_field( $this->form_fields['egassem_dleif'] );
-			$email_ip = sanitize_text_field( $this->get_the_ip() );
+			// No need to sanitize yet, we pass these values thru a filter.
+			$email_subject = $this->form_fields['tcejbus_dleif'];
+			$email_message = $this->form_fields['egassem_dleif'];
+			$email_ip = $this->get_the_ip();
+			$receiver = get_bloginfo( 'admin_email' );
+
+			// Headers cannot be filtered, sanitize now.
 			$headers  = 'From: ' . sanitize_text_field( $this->form_fields['eman_dleif'] ) . ' <' . sanitize_email( $this->form_fields['liame_dleif'] ) . ">\n";
 			$headers .= "Content-Type: text/html; charset=UTF-8\n";
 			$headers .= "Content-Transfer-Encoding: 8bit\n";
-			$receiver = sanitize_email( apply_filters( 'tkt_cntct_frm_email', get_bloginfo( 'admin_email' ), $this->form_fields['id'] ) );
 
+			// Apply filters and sanitize.
 			$email_subject = sanitize_text_field( apply_filters( 'tkt_cntct_frm_subject', $email_subject, $this->form_fields, $receiver ) );
 			$email_message = wp_kses_post( apply_filters( 'tkt_cntct_frm_message', $email_message, $this->form_fields, $receiver ) );
-			$email_ip = apply_filters( 'tkt_cntct_frm_ip', $this->get_the_ip(), $this->form_fields['id'] );
-			$email_message = $email_message . "\n\nIP: " . sanitize_text_field( $email_ip );
+			// Email IP is sanitized when added to the email message.
+			$email_ip_string = '<p>IP: ' . $this->get_the_ip() . '</p>';
+			$email_ip_string = apply_filters( 'tkt_cntct_frm_ip', $email_ip_string, $this->form_fields['id'] );
+			$email_message = $email_message . sanitize_text_field( $email_ip_string );
+			$receiver = sanitize_email( apply_filters( 'tkt_cntct_frm_email', $receiver, $this->form_fields['id'] ) );
 
+			// Action fired just before email is sent.
 			do_action( 'tkt_cntct_frm_pre_send_mail', $this->form_fields );
 			wp_mail( $receiver, $email_subject, $email_message, $headers );
+			// Action fired just after email is sent.
 			do_action( 'tkt_cntct_frm_post_send_mail', $receiver, $email_subject, $email_message, $headers, $this->form_fields );
 
 			if ( $_SERVER && isset( $_SERVER['HTTP_HOST'] ) && isset( $_SERVER['REQUEST_URI'] ) ) {
+
+				// Build redirect URL.
 				$redirect_url  = is_ssl() ? 'https://' : 'http://';
 				/**
 				 * We can NOT escape or sanitize an URL here at this point! False WPCS alarm.
-				 * If we do this, since we do not have a protocol yet prepended, esc_url_raw will fallback to HTTP.
+				 * If we do sanitize/escape, since we do not have a protocol yet prepended, esc_url_raw will fallback to HTTP.
 				 */
 				$redirect_url .= wp_unslash( $_SERVER['HTTP_HOST'] );
-				$redirect_url .= sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+				$redirect_url .= wp_unslash( $_SERVER['REQUEST_URI'] );
 				$redirect_url = $redirect_url . '?success=true';
 			} else {
 				$redirect_url = get_home_url();
 			}
-			$redirect_url = apply_filters( 'tkt_cntct_frm_redirect_uri', $redirect_url, $this->form_fields['id'] );
+			// Apply filter to change the Redirect URL.
+			$redirect_url = apply_filters( 'tkt_cntct_frm_redirect_uri', esc_url_raw( $redirect_url ), $this->form_fields['id'] );
 
+			// Action just before redirect happens.
 			do_action( 'tkt_cntct_frm_pre_redirect', $redirect_url, $this->form_fields['id'] );
-			wp_redirect( esc_url_raw( $redirect_url ) );
+			// Safe redirect.
+			wp_safe_redirect( esc_url_raw( $redirect_url ) );
+			// Action just after redirect happend.
 			do_action( 'tkt_cntct_frm_post_redirect' );
 
 			exit;
@@ -283,7 +298,7 @@ class Tkt_Contact_Form_Public {
 		}
 
 		$this->send_email_response = array(
-			'sent'      => $sent,
+			'sent'      => boolval( $sent ),
 			'result'    => $result,
 		);
 
@@ -300,10 +315,11 @@ class Tkt_Contact_Form_Public {
 
 		$info = '';
 
+		// Note: $atts is already sanitized in ShortCode. Nonetheless we escape it again.
 		if ( ! empty( $send_email_response['result'] ) ) {
-			$info = '<div class="tkt-error">' . $send_email_response['result'] . '</div>';
+			$info = '<div class="tkt-error">' . esc_textarea( $send_email_response['result'] ) . '</div>';
 		} elseif ( isset( $_GET['success'] ) && 'true' === $_GET['success'] ) {
-			$info = '<div class="tkt-success">' . $atts['success'] . '</div>';
+			$info = '<div class="tkt-success">' . esc_textarea( $atts['success'] ) . '</div>';
 		}
 
 		/**
@@ -340,12 +356,14 @@ class Tkt_Contact_Form_Public {
 		    <div>
 		        <input type="submit" value="' . esc_attr( $atts['label_submit'] ) . '" name="submit" id="submit" />
 		    </div>
+
 		    <input type="hidden" id="error_empty" name="error_empty" value="' . esc_attr( $atts['error_empty'] ) . '">
 		    <input type="hidden" id="error_noemail" name="error_noemail" value="' . esc_attr( $atts['error_noemail'] ) . '">
 		    <input type="hidden" id="success" name="success" value="' . esc_attr( $atts['success'] ) . '">
 		    <input type="hidden" id="id" name="id" value="' . esc_attr( $atts['id'] ) . '">
 
 		    ' . wp_nonce_field( 'tkt_cntct_frm_nonce', '_wpnonce', true, false ) . '
+
 		</form>';
 
 		$contact_form = array(

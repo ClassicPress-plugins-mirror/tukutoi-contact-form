@@ -1,12 +1,12 @@
 # TukuToi Contact Form
 
-Simple Contact Form for ClassicPress Websites.
+Simple Contact Form for WordPress Websites.
 
 ## Description
 
-TukuToi Contact Form Plugin lets you add a simple Contact Form to any Page, Post or Custom Post of your ClassicPress Website.
+TukuToi Contact Form Plugin lets you add a simple Contact Form to any Page, Post or Custom Post of your WordPress Website.
 Using a ShortCode with attributes you can configure several aspects of the Contact Form, such as:
-- Receiver Email (defaults to the Website's Admin Email)
+- Form ID
 - Label for the Name Input
 - Label for the Email Input
 - Label for the Subject Input
@@ -18,7 +18,7 @@ Using a ShortCode with attributes you can configure several aspects of the Conta
 
 ## Installation
 
-1. Install and Activate like any other ClassicPress Plugin
+1. Install and Activate like any other WordPress Plugin
 1. Insert and configure the ShortCode `[tkt_cntct_frm_contact_form]` anywhere you want to see the form
 
 ## ShortCode Attributes
@@ -40,7 +40,7 @@ The Plugin offers several actions and filters.
 * `tkt_cntct_frm_email`. Allows to modify the receveir email of a Contact form. Defaults to `get_bloginfo( 'admin_email' )`. Second argument passed is the Form ID.
 ```
 add_filter( 'tkt_cntct_frm_email', 'special_receiver', 10, 2 );
-function new_email( $email, $id ){
+function special_receiver( $email, $id ){
 	if( (int)$id === 1 ){// If your Form ID is 1
 		return 'an@email.com';
 	} else {
@@ -50,12 +50,22 @@ function new_email( $email, $id ){
 ```
 
 * `tkt_cntct_frm_subject`. Allows to modify the Subject of email sent. Second argument are ALL the form fields (array). Form ID is part of the form fields. Third argument is the receiver Email.
+```
+add_filter( 'tkt_cntct_frm_subject', 'special_subject', 10, 3 );
+function special_subject( $subject, $form_fields, $receiver ){
+	if( $form_fields['id'] === 'my-contact-form' ){// If your Form ID is my-contact-form
+		return 'Custom Subject';
+	} else {
+		return $subject;
+	}
+}
+```
 * `tkt_cntct_frm_message`. Allows to modify (or append to) the Message of email sent. Second argument are ALL the form Fields (array). Form ID is part of the form fields. Third argument is the receiver Email.
 ```
 add_filter('tkt_cntct_frm_message', 'append_to_message', 10, 3);
 function append_to_message( $message, $form_fields, $receiver ){
-	if( (int)$form_fields['id'] === 2 ){// If your form is ID 2
-		return $message . 'appended string';
+	if( $form_fields['id'] === 'my-contact-form' ){// If your form is ID my-contact-form
+		return $message . '<p>appended string</p>';
 	} elseif( $receiver === 'my@receiver.com' ){
 	  return 'overwrite the entire message';
 	} else{
@@ -64,17 +74,69 @@ function append_to_message( $message, $form_fields, $receiver ){
 
 }
 ```
-(Same example can be applied to the Subject Filter)
 
 * `tkt_cntct_frm_redirect_uri`. Allows to filter the Redirect URL. Defaults to current page with `?success=true` appended on success. Second argument passed is Form ID.
+```
+add_filter('tkt_cntct_frm_redirect_uri', 'redirect_url', 10, 2);
+function redirect_url( $redirect, $id ){
+	if( $id === 'my-contact-form' ){// If your form is ID my-contact-form
+		return 'https://custom.url/thing';
+	} else{
+		return $redirect;
+	}
+
+}
+```
+
+* `tkt_cntct_frm_ip`. Allows to filter the IP Address String appended to the email body (useful to remove it, for example). Second argument is the Form ID.
+```
+add_filter('tkt_cntct_frm_ip', 'filter_ip', 10, 2);
+function filter_ip( $ip, $id ){
+	if( $id === 'my-contact-form' ){// If your form is ID my-contact-form
+		return '';// remove IP alltogether.
+	}
+}
+```
 
 * `tkt_cntct_frm_pre_send_mail`. Action fired right before the mail is sent. Second argument all form fields. Helpful to do things before the mail is sent...
+```
+add_action( 'tkt_cntct_frm_pre_send_mail', 'pre_send_mail', 10, 1 );
+function pre_send_mail($form_fields){
+	if($form_fields['id'] === 'my-contact-form'){
+		wp_mail( 'custom@email.com', 'new mail', 'someone is about to send an email with your contact form' );
+	}
+}
+```
 
-* `tkt_cntct_frm_post_send_mail`. Action fired right after the email is sent. Arguments include $receiver, $email_subject, $email_message, $headers, $form_fields. Helpful to for example send another email to another place, after the mail was sent. Or whatever, abort the script, if you like.
+* `tkt_cntct_frm_post_send_mail`. Action fired right after the email is sent. Arguments are $receiver, $email_subject, $email_message, $headers, $form_fields. Helpful to for example send another email to another place, after the mail was sent. Or whatever, abort the script, if you like.
+```
+add_action( 'tkt_cntct_frm_post_send_mail', 'post_send_mail', 10, 5 );
+function post_send_mail($receiver, $email_subject, $email_message, $headers, $form_fields){
+	if($form_fields['id'] === 'my-contact-form'){
+		wp_mail( 'custom@email.com', 'new mail', 'someone has sent an email with your contact form' );
+	}
+}
+```
 
 * `tkt_cntct_frm_pre_redirect`. Action fired right before the wp_redirect is fired. Arguments are $redirect_url, $form_id
+```
+add_action( 'tkt_cntct_frm_pre_redirect', 'pre_redirect', 10, 2 );
+function pre_redirect($redirect_url, $form_id){
+	if($form_id === 'my-contact-form'){
+		wp_redirect( 'https://wherever.com' );
+		exit;
+	}
+}
+```
+
 
 * `tkt_cntct_frm_post_redirect`. Action fired right after the wp_redirect is fired. No arguments.
+```
+add_action( 'tkt_cntct_frm_post_redirect', 'post_redirect', 10 );
+function post_redirect(){
+	wp_mail( 'custom@email.com', 'new mail', 'someone has sent an email with your contact form and everything went well, they where redirected to your target url' );
+}
+```
 
 ## Styling the form
 
@@ -86,8 +148,16 @@ Available classes and IDs:
 * Each input has an error class set when failing validaton: `tkt-missing-or-invalid`
 * Heneypot fields are usually not to be styled further, but who knows you might need to access them, they use class `tkt-ohnohoney`
 
+Note that Plugin CSS (and JS) are enqueued only when the ShortCode is added to a page/post/ For this reason scripts are added to the footer.
 
 ## Changelog
+
+### 2.1.1
+[Added] Readme Examples for Filters
+[Added] Comments to code 
+[Fixed] IP Address filter was not filtering the actual string
+[Fixed] Redirect in code was not using wp_safe_redirect
+[Fixed] Few form contents where not escaped/sanitized
 
 ### 2.1.0
 [Added] Separated IP from message body so body can be filtered alone

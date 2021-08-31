@@ -2,7 +2,7 @@
 /**
  * The plugin bootstrap file
  *
- * This file is read by WordPress or ClassicPress to generate the plugin information in the plugin
+ * This file is read by WordPress to generate the plugin information in the plugin
  * admin area. This file also includes all of the dependencies used by the plugin,
  * registers the activation and deactivation functions, and defines a function
  * that starts the plugin.
@@ -14,7 +14,7 @@
  * @wordpress-plugin
  * Plugin Name:       TukuToi Contact Form
  * Plugin URI:        https://plugin.com/tkt-contact-form-uri/
- * Description:       A simple Contact Form for ClassicPress.
+ * Description:       A simple Contact Form for WordPress.
  * Version:           2.1.0
  * Author:            TukuToi
  * Requires at least: 1.0.0
