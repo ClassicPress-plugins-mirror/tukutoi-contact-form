@@ -4,7 +4,7 @@ Donate link: https://www.tukutoi.com/
 Tags: contact form, form, classicpress
 Requires at least: 4.9.15
 Tested up to: 5.8
-Stable tag: 2.1.1
+Stable tag: 2.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -159,6 +159,9 @@ Available classes and IDs:
 Note that Plugin CSS (and JS) are enqueued only when the ShortCode is added to a page/post/ For this reason scripts are added to the footer.
 
 == Changelog ==
+
+= 2.1.2 =
+[Fixed] Make sure HTML is not lost from IP Paragraph
 
 = 2.1.1 = 
 [Added] Readme Examples for Filters

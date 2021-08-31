@@ -260,7 +260,7 @@ class Tkt_Contact_Form_Public {
 			// Email IP is sanitized when added to the email message.
 			$email_ip_string = '<p>IP: ' . $this->get_the_ip() . '</p>';
 			$email_ip_string = apply_filters( 'tkt_cntct_frm_ip', $email_ip_string, $this->form_fields['id'] );
-			$email_message = $email_message . sanitize_text_field( $email_ip_string );
+			$email_message = $email_message . wp_kses_post( $email_ip_string );
 			$receiver = sanitize_email( apply_filters( 'tkt_cntct_frm_email', $receiver, $this->form_fields['id'] ) );
 
 			// Action fired just before email is sent.
