@@ -4,7 +4,7 @@ Donate link: https://www.tukutoi.com/
 Tags: contact form, form, classicpress
 Requires at least: 4.9.15
 Tested up to: 5.8
-Stable tag: 2.1.2
+Stable tag: 2.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,7 +13,7 @@ Simple Contact Form for WordPress and ClassicPress Websites.
 == Description ==
 
 TukuToi Contact Form Plugin lets you add a simple Contact Form to any Page, Post or Custom Post of your WordPress Website.
-Using a ShortCode with attributes you can configure several aspects of the Contact Form, such as:
+Using the ShortCode `[tkt_cntct_frm_contact_form]` with attributes you can configure several aspects of the Contact Form, such as:
 - Form ID
 - Label for the Name Input
 - Label for the Email Input
@@ -44,6 +44,8 @@ Thus a clear decision was made to not provide a GUI for this plugin.
 Furthermore, keeping the plugin minimal, targeted and not using any advanced features, we can keep it compatible with WordPress versions from 4.x up to any version to come, without having to make a split between the worlds.
 
 This plugin therefore is compatible with ClassicPress, as well as with WordPress.
+
+Note: Only one Contact Form can be inserted each page or post.
 
 == Screenshots ==
 
@@ -212,6 +214,9 @@ Available classes and IDs:
 Note that Plugin CSS (and JS) are enqueued only when the ShortCode is added to a page/post. For this reason scripts are added to the footer.
 
 == Changelog ==
+
+= 2.1.3 =
+[Fixed] Error in the readme
 
 = 2.1.2 =
 [Fixed] Make sure HTML is not lost from IP Paragraph

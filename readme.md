@@ -5,7 +5,7 @@ Simple Contact Form for WordPress Websites.
 ## Description
 
 TukuToi Contact Form Plugin lets you add a simple Contact Form to any Page, Post or Custom Post of your WordPress Website.
-Using a ShortCode with attributes you can configure several aspects of the Contact Form, such as:
+Using the ShortCode `[tkt_cntct_frm_contact_form]` with attributes you can configure several aspects of the Contact Form, such as:
 - Form ID
 - Label for the Name Input
 - Label for the Email Input
@@ -15,6 +15,8 @@ Using a ShortCode with attributes you can configure several aspects of the Conta
 - Error message for required Fields
 - Error for invalid Emails
 - Success message
+
+Note: Only one Contact Form can be inserted each page or post.
 
 ## Installation
 
@@ -151,6 +153,9 @@ Available classes and IDs:
 Note that Plugin CSS (and JS) are enqueued only when the ShortCode is added to a page/post/ For this reason scripts are added to the footer.
 
 ## Changelog
+
+### 2.1.3
+[Fixed] Error in the readme
 
 ### 2.1.2
 [Fixed] Make sure HTML is not lost from IP Paragraph
