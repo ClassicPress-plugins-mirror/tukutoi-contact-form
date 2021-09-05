@@ -1,3 +1,5 @@
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=TukuToi_tukutoi-contact-form&metric=bugs)](https://sonarcloud.io/dashboard?id=TukuToi_tukutoi-contact-form)
+
 # TukuToi Contact Form
 
 Simple Contact Form for WordPress Websites.
