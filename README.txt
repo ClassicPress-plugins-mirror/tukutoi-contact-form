@@ -4,7 +4,7 @@ Donate link: https://www.tukutoi.com/
 Tags: contact form, form, classicpress
 Requires at least: 4.9.15
 Tested up to: 5.8
-Stable tag: 2.1.4
+Stable tag: 2.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 

@@ -1,3 +1,9 @@
+= 2.2.0 =
+[Added] Added "Prospect" Email and Name to the Mail Body
+[Added] Filter to allow changing the "From" email
+[Added] Filter to allow changing the Subject of the mail sent (the "internal" subject, the "message" subject filter stays the same)
+[Fixed] Do not send the email from the "Prospect" Email, instead, use the Blog Admin Email
+
 = 2.1.4 =
 [Changed] Updated Readme and added SonarCloud Scan
 

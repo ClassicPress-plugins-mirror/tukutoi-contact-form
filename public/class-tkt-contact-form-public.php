@@ -244,30 +244,37 @@ class Tkt_Contact_Form_Public {
 		if ( false === $error ) {
 
 			// No need to sanitize yet, we pass these values thru a filter.
-			$email_subject = $this->form_fields['tcejbus_dleif'];
+			$form_subject = $this->form_fields['tcejbus_dleif'];
 			$email_message = $this->form_fields['egassem_dleif'];
 			$email_ip = $this->get_the_ip();
-			$receiver = get_bloginfo( 'admin_email' );
+
+			// Get the Prospect Email and Name.
+			$form_email = sanitize_email( $this->form_fields['liame_dleif'] );
+			$form_name = sanitize_text_field( $this->form_fields['eman_dleif'] );
+
+			$receiver = sanitize_email( apply_filters( 'tkt_cntct_frm_email', get_bloginfo( 'admin_email' ), $this->form_fields['id'] ) );
+			$from = apply_filters( 'tkt_cntct_frm_from', sanitize_text_field( get_bloginfo( 'name' ) ) );
+			$subject = esc_html( apply_filters( 'tkt_cntct_frm_internal_subject', __( 'New Contact Initiated', 'tkt-contact-form' ) ) );
 
 			// Headers cannot be filtered, sanitize now.
-			$headers  = 'From: ' . sanitize_text_field( $this->form_fields['eman_dleif'] ) . ' <' . sanitize_email( $this->form_fields['liame_dleif'] ) . ">\n";
+			$headers  = 'From: ' . sanitize_text_field( $from ) . ' <' . $receiver . ">\n";
+			$headers .= 'Reply-To: <' . $form_email . '>' . "\r\n";
 			$headers .= "Content-Type: text/html; charset=UTF-8\n";
 			$headers .= "Content-Transfer-Encoding: 8bit\n";
 
 			// Apply filters and sanitize.
-			$email_subject = sanitize_text_field( apply_filters( 'tkt_cntct_frm_subject', $email_subject, $this->form_fields, $receiver ) );
+			$form_subject = sanitize_text_field( apply_filters( 'tkt_cntct_frm_subject', $form_subject, $this->form_fields, $receiver ) );
 			$email_message = wp_kses_post( apply_filters( 'tkt_cntct_frm_message', $email_message, $this->form_fields, $receiver ) );
 			// Email IP is sanitized when added to the email message.
 			$email_ip_string = '<p>IP: ' . $this->get_the_ip() . '</p>';
 			$email_ip_string = apply_filters( 'tkt_cntct_frm_ip', $email_ip_string, $this->form_fields['id'] );
-			$email_message = $email_message . wp_kses_post( $email_ip_string );
-			$receiver = sanitize_email( apply_filters( 'tkt_cntct_frm_email', $receiver, $this->form_fields['id'] ) );
+			$email_body = $email_message . wp_kses_post( $email_ip_string ) . '<p>' . esc_html__( 'Contact Email: ', 'tkt-contact-form' ) . $form_email . '</p><p>' . esc_html__( 'Contact Name: ', 'tkt-contact-form' ) . $form_name . '</p>';
 
 			// Action fired just before email is sent.
 			do_action( 'tkt_cntct_frm_pre_send_mail', $this->form_fields );
-			wp_mail( $receiver, $email_subject, $email_message, $headers );
+			wp_mail( $receiver, $subject, $email_body, $headers );
 			// Action fired just after email is sent.
-			do_action( 'tkt_cntct_frm_post_send_mail', $receiver, $email_subject, $email_message, $headers, $this->form_fields );
+			do_action( 'tkt_cntct_frm_post_send_mail', $receiver, $form_subject, $email_body, $headers, $this->form_fields );
 
 			if ( $_SERVER && isset( $_SERVER['HTTP_HOST'] ) && isset( $_SERVER['REQUEST_URI'] ) ) {
 
