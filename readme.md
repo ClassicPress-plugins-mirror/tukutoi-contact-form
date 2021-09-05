@@ -52,7 +52,19 @@ function special_receiver( $email, $id ){
 }
 ```
 
-* `tkt_cntct_frm_subject`. Allows to modify the Subject of email sent. Second argument are ALL the form fields (array). Form ID is part of the form fields. Third argument is the receiver Email.
+* `tkt_cntct_frm_from`. Allows to modify the "from" email header of a the email sent. Defaults to `get_bloginfo( 'name' )`. Second argument passed is the Form ID.
+```
+add_filter( 'tkt_cntct_frm_from', 'special_header_from', 10, 2 );
+function special_header_from( $from, $id ){
+	if( (int)$id === 1 ){// If your Form ID is 1
+		return 'A prospect';
+	} else {
+		return $from;
+	}
+}
+```
+
+* `tkt_cntct_frm_subject`. Allows to modify the Subject **passed in the Form**. This subject is appended to the Footer of the Email. Second argument are ALL the form fields (array). Form ID is part of the form fields. Third argument is the receiver Email.
 ```
 add_filter( 'tkt_cntct_frm_subject', 'special_subject', 10, 3 );
 function special_subject( $subject, $form_fields, $receiver ){
@@ -63,6 +75,19 @@ function special_subject( $subject, $form_fields, $receiver ){
 	}
 }
 ```
+
+* `tkt_cntct_frm_internal_subject`. Allows to modify the Subject **in the sent mail Header**. This subject is the one you see in the "From" of the email you will receive when this Contact Form is submitted. Second argument are ALL the form fields (array). Form ID is part of the form fields. Third argument is the receiver Email.
+```
+add_filter( 'tkt_cntct_frm_internal_subject', 'special_internal_subject', 10, 3 );
+function special_internal_subject( $subject, $form_fields, $receiver ){
+	if( $form_fields['id'] === 'my-contact-form' ){// If your Form ID is my-contact-form
+		return 'You have new mail';
+	} else {
+		return $subject;
+	}
+}
+```
+
 * `tkt_cntct_frm_message`. Allows to modify (or append to) the Message of email sent. Second argument are ALL the form Fields (array). Form ID is part of the form fields. Third argument is the receiver Email.
 ```
 add_filter('tkt_cntct_frm_message', 'append_to_message', 10, 3);
@@ -91,12 +116,44 @@ function redirect_url( $redirect, $id ){
 }
 ```
 
-* `tkt_cntct_frm_ip`. Allows to filter the IP Address String appended to the email body (useful to remove it, for example). Second argument is the Form ID.
+* `tkt_cntct_frm_ip`. Allows to filter the IP Address appended to the email body (useful to remove it, for example). Second argument passed is Form ID.
+
 ```
 add_filter('tkt_cntct_frm_ip', 'filter_ip', 10, 2);
 function filter_ip( $ip, $id ){
 	if( $id === 'my-contact-form' ){// If your form is ID my-contact-form
 		return '';// remove IP alltogether.
+	} else {
+	    return $ip;
+	}
+}
+```
+
+* `tkt_cntct_frm_send_confirmation`. Allows to stop the Confirmation Email from being sent. Second argument passed is Form ID.
+
+```
+add_filter('tkt_cntct_frm_send_confirmation', 'stop_confirmation', 10, 2);
+function filter_ip( $ip, $id ){
+	if( $id === 'my-contact-form' ){// If your form is ID my-contact-form
+		return false;// stop email.
+	} else {
+	    return true;
+	}
+}
+```
+
+* `tkt_cntct_frm_confirmation_message`. Allows to change the Confirmation Email Text. Defaults to `We have received your message and will reply soon. For the records, this was your message:` Second argument passed is Form ID.
+NOTE: The Message the prospect sent in the form is always appended in a separate paragraph.
+NOTE: all filters applied to From/Receiver, Subjects, and form message are applied to this email as well.
+
+```
+add_filter('tkt_cntct_frm_confirmation_message', 'confirmation_message', 10, 2);
+function filter_ip( $message, $id ){
+	if( $id === 'my-contact-form' ){// If your form is ID my-contact-form
+		return 'We will reply to you. This is your message:';// stop email.
+	}
+	else {
+	    return $message;
 	}
 }
 ```
