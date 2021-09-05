@@ -1,4 +1,5 @@
-# TukuToi Contact Form
+# TukuToi Contact Form ![ClassicPress Plugin: Required CP Version](https://img.shields.io/badge/dynamic/json?color=%23057f99&label=classicpress&prefix=v&query=%24.data.minimum_cp_version&url=https%3A%2F%2Fdirectory.classicpress.net%2Fapi%2Fplugins%2Ftkt-contact-form) ![WordPress Plugin: Tested WP Version](https://img.shields.io/wordpress/plugin/tested/tkt-contact-form)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=TukuToi_tukutoi-contact-form&metric=bugs)](https://sonarcloud.io/dashboard?id=TukuToi_tukutoi-contact-form) [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=TukuToi_tukutoi-contact-form&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=TukuToi_tukutoi-contact-form) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=TukuToi_tukutoi-contact-form&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=TukuToi_tukutoi-contact-form) [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=TukuToi_tukutoi-contact-form&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=TukuToi_tukutoi-contact-form) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=TukuToi_tukutoi-contact-form&metric=security_rating)](https://sonarcloud.io/dashboard?id=TukuToi_tukutoi-contact-form)
 
 Simple Contact Form for WordPress Websites.
 
@@ -151,41 +152,3 @@ Available classes and IDs:
 * Heneypot fields are usually not to be styled further, but who knows you might need to access them, they use class `tkt-ohnohoney`
 
 Note that Plugin CSS (and JS) are enqueued only when the ShortCode is added to a page/post/ For this reason scripts are added to the footer.
-
-## Changelog
-
-### 2.1.3
-[Fixed] Error in the readme
-
-### 2.1.2
-[Fixed] Make sure HTML is not lost from IP Paragraph
-
-### 2.1.1
-[Added] Readme Examples for Filters
-[Added] Comments to code 
-[Fixed] IP Address filter was not filtering the actual string
-[Fixed] Redirect in code was not using wp_safe_redirect
-[Fixed] Few form contents where not escaped/sanitized
-
-### 2.1.0
-[Added] Separated IP from message body so body can be filtered alone
-[Added] Readme.md file
-[Changed] Message body now uses wp_kses_post when filter is applied
-[Changed] Updated Readme
-
-### 2.0.1
-[Fixed] Error in the readme description for filter tkt_cntct_frm_message.
-
-### 2.0.0
-* [Removed] ShortCode attribute to change receiver email
-* [Added] ShortCode attribute to define Form ID
-* [Added] Several Filters and actions to control Form and Mail events/contents
-* [Fixed] When form is successfully submitted it now properly redirects to a location instead of replacing the form
-* [Fixed] All CSS Classes and IDs now use specific tkt- prefix.
-
-
-### 1.0.1
-* [Changed] Updated Readme
-
-### 1.0.0
-* Initial Release
