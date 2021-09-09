@@ -1,3 +1,14 @@
+= 2.2.0 =
+[Added] Added "Prospect" Email and Name to the Mail Body
+[Added] Filter to allow changing the "From" email
+[Added] Filter to allow changing the Subject of the mail sent (the "internal" subject, the "message" subject filter stays the same)
+[Added] Confirmation message to prospect when form is submitted
+[Added] Filter to stop Confirmation message to prospect from being sent
+[Added] Filter to change the Confirmation message content to prospect
+[Fixed] Do not send the email from the "Prospect" Email, instead, use the Blog Admin Email
+[Changed] Updated Readme with new filters
+[Changed] Refactored some code
+
 = 2.1.4 =
 [Changed] Updated Readme and added SonarCloud Scan
 

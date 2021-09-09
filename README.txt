@@ -4,7 +4,7 @@ Donate link: https://www.tukutoi.com/
 Tags: contact form, form, classicpress
 Requires at least: 4.9.15
 Tested up to: 5.8
-Stable tag: 2.1.4
+Stable tag: 2.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -87,15 +87,44 @@ function special_receiver( $email, $id ){
 }
 </code></pre>
 
-= How can I modify the Subject of the Email Sent? =
+= How can I modify the From Email Header? =
 
-`tkt_cntct_frm_subject`. Allows to modify the Subject of email sent. Second argument are ALL the form fields (array). Form ID is part of the form fields. Third argument is the receiver Email.
+`tkt_cntct_frm_from`. Allows to modify the "from" email header of a the email sent. Defaults to `get_bloginfo( 'name' )`. Second argument passed is the Form ID.
+
+<pre><code>
+add_filter( 'tkt_cntct_frm_from', 'special_header_from', 10, 2 );
+function special_header_from( $from, $id ){
+	if( (int)$id === 1 ){// If your Form ID is 1
+		return 'A prospect';
+	} else {
+		return $from;
+	}
+}
+</code></pre>
+
+= How can I modify the Subject added in the Form? =
+
+`tkt_cntct_frm_subject`. Allows to modify the Subject <strong>passed in the Form</strong>. This subject is appended to the Footer of the Email. Second argument are ALL the form fields (array). Form ID is part of the form fields. Third argument is the receiver Email.
 
 <pre><code>
 add_filter( 'tkt_cntct_frm_subject', 'special_subject', 10, 3 );
 function special_subject( $subject, $form_fields, $receiver ){
 	if( $form_fields['id'] === 'my-contact-form' ){// If your Form ID is my-contact-form
 		return 'Custom Subject';
+	} else {
+		return $subject;
+	}
+}
+</code></pre>
+
+= How can I modify the Subject of the Email sent by the form? =
+
+`tkt_cntct_frm_internal_subject`. Allows to modify the Subject **in the sent mail Header**. This subject is the one you see in the "From" of the email you will receive when this Contact Form is submitted. Second argument are ALL the form fields (array). Form ID is part of the form fields. Third argument is the receiver Email.
+<pre><code>
+add_filter( 'tkt_cntct_frm_internal_subject', 'special_internal_subject', 10, 3 );
+function special_internal_subject( $subject, $form_fields, $receiver ){
+	if( $form_fields['id'] === 'my-contact-form' ){// If your Form ID is my-contact-form
+		return 'You have new mail';
 	} else {
 		return $subject;
 	}
@@ -138,13 +167,48 @@ function redirect_url( $redirect, $id ){
 
 = How can I modify/remove the IP Address appended in the Email Message? =
 
-`tkt_cntct_frm_ip`. Allows to filter the IP Address appended to the email body (useful to remove it, for example).
+`tkt_cntct_frm_ip`. Allows to filter the IP Address appended to the email body (useful to remove it, for example). Second argument passed is Form ID.
 
 <pre><code>
 add_filter('tkt_cntct_frm_ip', 'filter_ip', 10, 2);
 function filter_ip( $ip, $id ){
 	if( $id === 'my-contact-form' ){// If your form is ID my-contact-form
 		return '';// remove IP alltogether.
+	} else {
+	    return $ip;
+	}
+}
+</code></pre>
+
+= How can I stop the confirmation Email sent to the prospect? =
+
+`tkt_cntct_frm_send_confirmation`. Allows to stop the Confirmation Email from being sent. Second argument passed is Form ID.
+
+<pre><code>
+add_filter('tkt_cntct_frm_send_confirmation', 'stop_confirmation', 10, 2);
+function filter_ip( $ip, $id ){
+	if( $id === 'my-contact-form' ){// If your form is ID my-contact-form
+		return false;// stop email.
+	} else {
+	    return true;
+	}
+}
+</code></pre>
+
+= How can I change the contents of the confirmation Email sent to the prospect? =
+
+`tkt_cntct_frm_confirmation_message`. Allows to change the Confirmation Email Text. Defaults to `We have received your message and will reply soon. For the records, this was your message:` Second argument passed is Form ID.
+NOTE: The Message the prospect sent in the form is always appended in a separate paragraph.
+NOTE: all filters applied to From/Receiver, Subjects, and form message are applied to this email as well.
+
+<pre><code>
+add_filter('tkt_cntct_frm_confirmation_message', 'confirmation_message', 10, 2);
+function filter_ip( $message, $id ){
+	if( $id === 'my-contact-form' ){// If your form is ID my-contact-form
+		return 'We will reply to you. This is your message:';// stop email.
+	}
+	else {
+	    return $message;
 	}
 }
 </code></pre>
