@@ -62,13 +62,6 @@ class Tkt_Contact_Form_Public {
 		$this->plugin_prefix = $plugin_prefix;
 		$this->version = $version;
 
-		$this->required_fields = array(
-			'eman_dleif'    => '',
-			'liame_dleif'   => '',
-			'tcejbus_dleif' => '',
-			'egassem_dleif' => '',
-		);
-
 		$this->form_fields = array(
 			'eman_dleif'        => '',
 			'liame_dleif'       => '',
@@ -83,6 +76,13 @@ class Tkt_Contact_Form_Public {
 			'id'                => '',
 		);
 
+		$this->required_fields = array(
+			'eman_dleif'    => '',
+			'liame_dleif'   => '',
+			'tcejbus_dleif' => '',
+			'egassem_dleif' => '',
+		);
+
 		$this->honeypot_fields = array(
 			'name'    => '',
 			'email'   => '',
@@ -90,16 +90,15 @@ class Tkt_Contact_Form_Public {
 			'message' => '',
 		);
 
-		$this->send_email_response = array(
-			'sent'      => false,
-			'result'    => null,
-		);
-
 		$this->error = array(
 			'eman_dleif'    => '',
 			'liame_dleif'   => '',
 			'tcejbus_dleif' => '',
 			'egassem_dleif' => '',
+		);
+
+		$this->send_email_response = array(
+			'result'    => null,
 		);
 
 	}
@@ -175,40 +174,192 @@ class Tkt_Contact_Form_Public {
 
 	/**
 	 * Build the HTML Form
-	 *
-	 * @return array Send Email Response.
 	 */
 	public function handle_contact_form() {
 
-		if ( empty( $_POST ) ) {
+		// Validate POSTed data.
+		// Check Nonce and $_POSTed data.
+		if ( empty( $_POST )
+			|| ! isset( $_POST['submit'] )
+			|| ! isset( $_REQUEST['_wpnonce'] )
+			|| ( isset( $_REQUEST['_wpnonce'] )
+				&& false === wp_verify_nonce( sanitize_key( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'tkt_cntct_frm_nonce' )
+			)
+		) {
 			return $this->send_email_response;
 		}
 
-		$sent = false;
+		$posted_data = $this->validate_posted_data( $_POST );
 
-		// Check Nonce.
-		if ( isset( $_REQUEST['_wpnonce'] ) && false === wp_verify_nonce( sanitize_key( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'tkt_cntct_frm_nonce' ) ) {
-			return $this->send_email_response;
+		// Sanitize POSTed Data.
+		$this->sanitize_posted_data( $posted_data );
+
+		// Validate inputs.
+		$errors = $this->error_validation();
+
+		if ( false === $errors['error'] ) {
+
+			/**
+			 * Get Visible Form Input Fields.
+			 * Form Fields already sanitized.
+			 *
+			 * @see sanitize_posted_data.
+			 */
+			$form_name = $this->form_fields['eman_dleif'];
+			$form_email = $this->form_fields['liame_dleif'];
+			$form_subject = $this->form_fields['tcejbus_dleif'];
+			$form_message = $this->form_fields['egassem_dleif'];
+
+			/**
+			 * Get hidden Form Data.
+			 */
+			$form_ip = sanitize_text_field( $this->get_the_ip() );
+
+			/**
+			 * Build Email Data.
+			 */
+			$receiver = sanitize_email( apply_filters( 'tkt_cntct_frm_email', get_bloginfo( 'admin_email' ), $this->form_fields['id'] ) );
+			$from = sanitize_text_field( apply_filters( 'tkt_cntct_frm_from', get_bloginfo( 'name' ), $this->form_fields['id'] ) );
+			$subject = sanitize_text_field( apply_filters( 'tkt_cntct_frm_internal_subject', __( 'New Contact Initiated', 'tkt-contact-form' ), $this->form_fields, $receiver ) );
+
+			// Get headers.
+			$headers = $this->build_header_data( $from, $form_email, $receiver );
+
+			// Apply filters to, and sanitize (filtered) Form Data.
+			$form_subject = sanitize_text_field( apply_filters( 'tkt_cntct_frm_subject', $form_subject, $this->form_fields, $receiver ) );
+			$form_message = wp_kses_post( apply_filters( 'tkt_cntct_frm_message', $form_message, $this->form_fields, $receiver ) );
+			$form_ip_string = '<p>IP: ' . sanitize_text_field( $form_ip ) . '</p>';
+			$form_ip_string = wp_kses_post( apply_filters( 'tkt_cntct_frm_ip', $form_ip_string, $this->form_fields['id'] ) );
+
+			// Build Email Body for notification.
+			$email_body = '<p>' . esc_html__( 'Subject: ', 'tkt-contact-form' ) . $form_subject . '</p>' . $form_message . '<p>' . esc_html__( 'Contact Email: ', 'tkt-contact-form' ) . $form_email . '</p><p>' . esc_html__( 'Contact Name: ', 'tkt-contact-form' ) . $form_name . '</p>' . $form_ip_string;
+
+			// Build Email Body for Confirmation.
+			$confirmation_message = esc_html( apply_filters( 'tkt_cntct_frm_confirmation_message', __( 'We have received your message and will reply soon. For the records, this was your message:', 'tkt-contact-form' ), $this->form_fields['id'] ) );
+			$confirmation_message = $confirmation_message . '<p>' . $form_message . '</p>';
+
+			// Wether to send confirmation.
+			$send_confirmation = boolval( apply_filters( 'tkt_cntct_frm_send_confirmation', true ) );
+
+			// Action fired just before email is sent.
+			do_action( 'tkt_cntct_frm_pre_send_mail', $this->form_fields );
+
+			// Send Email to host.
+			wp_mail( $receiver, $subject, $email_body, $headers['notification'] );
+
+			// Send Email to prospect.
+			if ( true === $send_confirmation ) {
+				wp_mail( $form_email, $form_subject, $confirmation_message, $headers['confirmation'] );
+			}
+
+			// Action fired just after email is sent.
+			do_action( 'tkt_cntct_frm_post_send_mail', sanitize_email( $receiver ), $form_subject, $email_body, $headers['notification'], $this->form_fields );
+
+			if ( $_SERVER && isset( $_SERVER['HTTP_HOST'] ) && isset( $_SERVER['REQUEST_URI'] ) ) {
+
+				// Build redirect URL.
+				$redirect_url  = is_ssl() ? 'https://' : 'http://';
+
+				/**
+				 * We can NOT escape or sanitize an URL here at this point! False WPCS alarm.
+				 * If we do sanitize/escape, since we do not have a protocol yet prepended, esc_url_raw will fallback to HTTP.
+				 */
+				$redirect_url .= wp_unslash( $_SERVER['HTTP_HOST'] );
+				$redirect_url .= wp_unslash( $_SERVER['REQUEST_URI'] );
+				$redirect_url = $redirect_url . '?success=true';
+			} else {
+				$redirect_url = get_home_url();
+			}
+			// Apply filter to change the Redirect URL.
+			$redirect_url = esc_url_raw( apply_filters( 'tkt_cntct_frm_redirect_uri', $redirect_url, $this->form_fields['id'] ) );
+
+			// Action just before redirect happens.
+			do_action( 'tkt_cntct_frm_pre_redirect', $redirect_url, $this->form_fields['id'] );
+
+			// Safe redirect.
+			wp_safe_redirect( $redirect_url );
+
+			// Action just after redirect happend.
+			do_action( 'tkt_cntct_frm_post_redirect' );
+
+			exit;
+
 		}
 
-		$error = false;
+		// If the Form was not filled or invalid data provided, update the response.
+		$this->send_email_response = array(
+			'result'    => $errors['result'],
+		);
 
+	}
+
+	/**
+	 * Enqueue Scripts and Styles on Demand.
+	 */
+	private function enqueue_on_demand() {
+
+		wp_enqueue_style( $this->plugin_name );
+		wp_enqueue_script( $this->plugin_name );
+
+	}
+
+	/**
+	 * Sanitize/Validate the ShortCode attributes.
+	 * At the moment only for Email and Text/Area fields.
+	 *
+	 * @param array $atts The ShortCode Attributes.
+	 */
+	private function sanitize_atts( $atts ) {
+
+		foreach ( $atts as $key => $value ) {
+			if ( 'email' === $key ) {
+				$atts[ $key ] = sanitize_email( $value );
+			} else {
+				$atts[ $key ] = sanitize_text_field( $value );
+			}
+		}
+
+		return $atts;
+
+	}
+
+	/**
+	 * Remove HoneyPot fields and Validate POSTed Data.
+	 *
+	 * @param array $posted_data The POSTed data.
+	 * @return array $posted_data|empty array The POSTed data without HoneyPot with only whitelisted Members, or empty array.
+	 */
+	private function validate_posted_data( $posted_data ) {
+
+		/**
+		 * Unset fake HoneyPot data.
+		 */
 		foreach ( $this->honeypot_fields as $field => $value ) {
-			unset( $_POST[ $field ] );
+			unset( $posted_data[ $field ] );
 		}
 
 		/**
-		 * If there are any other fields in $_POST something is sketchy, thus abort.
+		 * If at this point there are any other fields in $_POST something is sketchy, thus abort.
 		 * We expect an empty array (no difference).
 		 */
-		$diff = array_diff_key( $_POST, $this->form_fields );
+		$diff = array_diff_key( $posted_data, $this->form_fields );
 
 		if ( ! empty( $diff ) ) {
-			return $this->send_email_response;
+			return array();
 		}
 
+		return $posted_data;
+
+	}
+
+	/**
+	 * Sanitize the POSTed data.
+	 *
+	 * @param array $posted_data the POSTed data.
+	 */
+	private function sanitize_posted_data( $posted_data ) {
 		// fetch everything that has been POSTed, sanitize.
-		foreach ( $_POST as $field => $value ) {
+		foreach ( $posted_data as $field => $value ) {
 
 			if ( 'liame_dleif' === $field ) {
 				$value = sanitize_email( $value );
@@ -221,6 +372,19 @@ class Tkt_Contact_Form_Public {
 			$this->form_fields[ $field ] = $value;
 
 		}
+	}
+
+	/**
+	 * Validate inputs and return errors.
+	 *
+	 * @return array $errors Wether error is true, and error messages.
+	 */
+	private function error_validation() {
+
+		$errors = array(
+			'error' => false,
+			'result' => '',
+		);
 
 		// if the required fields are empty, switch $error to TRUE and set the result text to the shortcode attribute named 'error_empty'.
 		foreach ( $this->required_fields as $required_field => $value ) {
@@ -229,114 +393,65 @@ class Tkt_Contact_Form_Public {
 
 			if ( empty( $value ) ) {
 				$this->error[ $required_field ] = 'tkt-missing-or-invalid';
-				$error = true;
-				$result = $this->form_fields['error_empty'];
+				$errors['error'] = true;
+				$errors['result'] = $this->form_fields['error_empty'];
 			}
 		}
 
 		// if the e-mail is not valid or missing, switch $error to TRUE and set the result text to the shortcode attribute named 'error_noemail'.
 		if ( ! is_email( $this->form_fields['liame_dleif'] ) ) {
 			$this->error['liame_dleif'] = 'tkt-missing-or-invalid';
-			$error = true;
-			$result = $this->form_fields['error_noemail'];
+			$errors['error'] = true;
+			$errors['result'] = $this->form_fields['error_noemail'];
 		}
 
-		if ( false === $error ) {
+		return $errors;
+	}
 
-			/**
-			 * Get Visible Form Input Fields.
-			 *
-			 * Only unfiltered data is sanitized at this point.
-			 */
-			$form_name = $this->form_fields['eman_dleif'];
-			$form_email = $this->form_fields['liame_dleif'];
-			$form_subject = $this->form_fields['tcejbus_dleif'];
-			$form_message = $this->form_fields['egassem_dleif'];
+	/**
+	 * Build Email Headers,
+	 *
+	 * @param string $from The "From" Name Header attribute of the notification mail. Defaults to BlogName.
+	 * @param email  $form_email The Prospect's email as added in the Form Email Field.
+	 * @param email  $receiver The "From" Email Header attribute of the notification mail. Defaults to Blog Admin Email.
+	 */
+	private function build_header_data( $from, $form_email, $receiver ) {
 
-			/**
-			 * Get hidden Form Data.
-			 */
-			$form_ip = $this->get_the_ip();
-
-			/**
-			 * Build Email Data.
-			 *
-			 * Only
-			 */
-			$receiver = apply_filters( 'tkt_cntct_frm_email', get_bloginfo( 'admin_email' ), $this->form_fields['id'] );
-			$from = apply_filters( 'tkt_cntct_frm_from', sanitize_text_field( get_bloginfo( 'name' ) ), $this->form_fields['id'] );
-			$subject = apply_filters( 'tkt_cntct_frm_internal_subject', __( 'New Contact Initiated', 'tkt-contact-form' ), $this->form_fields, sanitize_email( $receiver ) );
-
-			/**
-			 * Build header data.
-			 */
-			$headers  = 'From: ' . sanitize_text_field( $from ) . ' <' . sanitize_email( $receiver ) . ">\n";
-			$headers .= 'Reply-To: <' . sanitize_email( $form_email ) . '>' . "\r\n";
-			$headers .= "Content-Type: text/html; charset=UTF-8\n";
-			$headers .= "Content-Transfer-Encoding: 8bit\n";
-
-			$confirmation_headers = 'From: ' . sanitize_text_field( $from ) . ' <' . sanitize_email( $receiver ) . ">\n";
-			$confirmation_headers .= 'Reply-To: <' . sanitize_email( $receiver ) . '>' . "\r\n";
-			$confirmation_headers .= "Content-Type: text/html; charset=UTF-8\n";
-			$confirmation_headers .= "Content-Transfer-Encoding: 8bit\n";
-
-			// Apply filters and sanitize of the Form Data.
-			$form_subject = sanitize_text_field( apply_filters( 'tkt_cntct_frm_subject', $form_subject, $this->form_fields, $receiver ) );
-			$form_message = wp_kses_post( apply_filters( 'tkt_cntct_frm_message', $form_message, $this->form_fields, $receiver ) );
-			// Email IP is sanitized when added to the email message.
-			$form_ip_string = '<p>IP: ' . sanitize_text_field( $form_ip ) . '</p>';
-			$form_ip_string = apply_filters( 'tkt_cntct_frm_ip', $form_ip_string, $this->form_fields['id'] );
-			$email_body = '<p>' . esc_html__( 'Subject: ', 'tkt-contact-form' ) . $form_subject . '</p>' . $form_message . wp_kses_post( $form_ip_string ) . '<p>' . esc_html__( 'Contact Email: ', 'tkt-contact-form' ) . sanitize_email( $form_email ) . '</p><p>' . esc_html__( 'Contact Name: ', 'tkt-contact-form' ) . sanitize_text_field( $form_name ) . '</p>';
-
-			// Confirmation message.
-			$confirmation_message = esc_html( apply_filters( 'tkt_cntct_frm_confirmation_message', __( 'We have received your message and will reply soon. For the records, this was your message:', 'tkt-contact-form' ), $this->form_fields['id'] ) );
-			$confirmation_message = $confirmation_message . '<p>' . $form_message . '</p>';
-			$send_confirmation = apply_filters( 'tkt_cntct_frm_send_confirmation', true );
-
-			// Action fired just before email is sent.
-			do_action( 'tkt_cntct_frm_pre_send_mail', $this->form_fields );
-			// Send Email to host.
-			wp_mail( sanitize_email( $receiver ), sanitize_text_field( $subject ), $email_body, $headers );
-			// Send Email to prospect.
-			if ( true === $send_confirmation ) {
-				wp_mail( sanitize_email( $form_email ), sanitize_text_field( $form_subject ), $confirmation_message, $confirmation_headers );
-			}
-			// Action fired just after email is sent.
-			do_action( 'tkt_cntct_frm_post_send_mail', sanitize_email( $receiver ), $form_subject, $email_body, $headers, $this->form_fields );
-
-			if ( $_SERVER && isset( $_SERVER['HTTP_HOST'] ) && isset( $_SERVER['REQUEST_URI'] ) ) {
-
-				// Build redirect URL.
-				$redirect_url  = is_ssl() ? 'https://' : 'http://';
-				/**
-				 * We can NOT escape or sanitize an URL here at this point! False WPCS alarm.
-				 * If we do sanitize/escape, since we do not have a protocol yet prepended, esc_url_raw will fallback to HTTP.
-				 */
-				$redirect_url .= wp_unslash( $_SERVER['HTTP_HOST'] );
-				$redirect_url .= wp_unslash( $_SERVER['REQUEST_URI'] );
-				$redirect_url = $redirect_url . '?success=true';
-			} else {
-				$redirect_url = get_home_url();
-			}
-			// Apply filter to change the Redirect URL.
-			$redirect_url = apply_filters( 'tkt_cntct_frm_redirect_uri', esc_url_raw( $redirect_url ), $this->form_fields['id'] );
-
-			// Action just before redirect happens.
-			do_action( 'tkt_cntct_frm_pre_redirect', esc_url_raw( $redirect_url ), $this->form_fields['id'] );
-			// Safe redirect.
-			wp_safe_redirect( esc_url_raw( $redirect_url ) );
-			// Action just after redirect happend.
-			do_action( 'tkt_cntct_frm_post_redirect' );
-
-			exit;
-
-		}
-
-		$this->send_email_response = array(
-			'sent'      => boolval( $sent ),
-			'result'    => $result,
+		$headers = array(
+			'notification' => '',
+			'confirmation' => '',
 		);
 
+		/**
+		 * Build header data.
+		 */
+		$headers['notification']  = 'From: ' . sanitize_text_field( $from ) . ' <' . sanitize_email( $receiver ) . ">\n";
+		$headers['notification'] .= 'Reply-To: <' . sanitize_email( $form_email ) . '>' . "\r\n";
+		$headers['notification'] .= "Content-Type: text/html; charset=UTF-8\n";
+		$headers['notification'] .= "Content-Transfer-Encoding: 8bit\n";
+
+		$headers['confirmation'] = 'From: ' . sanitize_text_field( $from ) . ' <' . sanitize_email( $receiver ) . ">\n";
+		$headers['confirmation'] .= 'Reply-To: <' . sanitize_email( $receiver ) . '>' . "\r\n";
+		$headers['confirmation'] .= "Content-Type: text/html; charset=UTF-8\n";
+		$headers['confirmation'] .= "Content-Transfer-Encoding: 8bit\n";
+
+		return $headers;
+
+	}
+
+	/**
+	 * Try to fetch the User's real IP
+	 */
+	private function get_the_ip() {
+		if ( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+			return sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
+		} elseif ( isset( $_SERVER['HTTP_CLIENT_IP'] ) ) {
+			return sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) );
+		} elseif ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
+			return sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+		} else {
+			return 'Could not detect the IP';
+		}
 	}
 
 	/**
@@ -408,51 +523,6 @@ class Tkt_Contact_Form_Public {
 
 		return $contact_form;
 
-	}
-
-	/**
-	 * Sanitize/Validate the ShortCode attributes.
-	 * At the moment only for Email and Text/Area fields.
-	 *
-	 * @param array $atts The ShortCode Attributes.
-	 */
-	private function sanitize_atts( $atts ) {
-
-		foreach ( $atts as $key => $value ) {
-			if ( 'email' === $key ) {
-				$atts[ $key ] = sanitize_email( $value );
-			} else {
-				$atts[ $key ] = sanitize_text_field( $value );
-			}
-		}
-
-		return $atts;
-
-	}
-
-	/**
-	 * Enqueue Scripts and Styles on Demand.
-	 */
-	private function enqueue_on_demand() {
-
-		wp_enqueue_style( $this->plugin_name );
-		wp_enqueue_script( $this->plugin_name );
-
-	}
-
-	/**
-	 * Try to fetch the User's real IP
-	 */
-	private function get_the_ip() {
-		if ( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-			return sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
-		} elseif ( isset( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-			return sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) );
-		} elseif ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
-			return sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
-		} else {
-			return 'Could not detect the IP';
-		}
 	}
 
 }
