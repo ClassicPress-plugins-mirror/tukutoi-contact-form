@@ -38,7 +38,7 @@ class Tkt_Contact_Form_Activator {
 	 * @access   private
 	 * @var      string    $plugin    The $_REQUEST['plugin'] value during plugin activation.
 	 */
-	private static $plugin  = 'tkt-contact-form/tkt-contact-form.php';
+	private static $plugin  = TKT_CONTACT_FORM_BASE_NAME;
 
 	/**
 	 * The $_REQUEST['action'] during plugin activation.

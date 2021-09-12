@@ -1,3 +1,6 @@
+= 2.2.1 =
+[Fixed] Issue when disbling/deleting/activating plugin after manual renaming
+
 = 2.2.0 =
 [Added] Added "Prospect" Email and Name to the Mail Body
 [Added] Filter to allow changing the "From" email
