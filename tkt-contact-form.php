@@ -15,7 +15,7 @@
  * Plugin Name:       TukuToi Contact Form
  * Plugin URI:        https://www.tukutoi.com/program/tukutoi-contact-form/
  * Description:       A simple Contact Form for WordPress.
- * Version:           2.2.0
+ * Version:           2.2.1
  * Author:            bedas
  * Requires at least: 4.9.15
  * Tested up to:      5.8
@@ -36,7 +36,12 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'TKT_CONTACT_FORM_VERSION', '2.2.0' );
+define( 'TKT_CONTACT_FORM_VERSION', '2.2.1' );
+
+/**
+ * Define the Plugin basename
+ */
+define( 'TKT_CONTACT_FORM_BASE_NAME', plugin_basename( __FILE__ ) );
 
 /**
  * The code that runs during plugin activation.
